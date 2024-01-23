@@ -1118,7 +1118,41 @@ export function Settings() {
                         ></input>
                       </ListItem>
                     </>
-                  ) : null}
+                  ) : (   
+                  <>                   
+                  <ListItem
+                    title="Github Plugin Token"
+                    subTitle="使用Github Plugin Token进行访问"
+                  >
+                    <PasswordInput
+                      value={accessStore.githubToken}
+                      type="text"
+                      placeholder="Github Plugin Token"
+                      onChange={(e) => {
+                        accessStore.update(
+                          (access) =>
+                            (access.githubToken = e.currentTarget.value),
+                        );
+                      }}
+                    />
+                  </ListItem>
+                  <ListItem
+                    title="接口地址"
+                    subTitle="设置接口地址"
+                  >
+                    <input
+                      type="text"
+                      value={accessStore.githubUrl}
+                      onChange={(e) =>
+                        accessStore.update(
+                          (access) =>
+                            (access.githubUrl = e.currentTarget.value),
+                        )
+                      }
+                    ></input>
+                  </ListItem>
+                  </>
+                  )}
                 </>
               )}
             </>

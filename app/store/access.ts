@@ -18,7 +18,7 @@ const DEFAULT_ACCESS_STATE = {
   accessCode: "",
   useCustomConfig: false,
 
-  provider: ServiceProvider.OpenAI,
+  provider: ServiceProvider.Github,
 
   // openai
   openaiUrl: DEFAULT_OPENAI_URL,
@@ -33,6 +33,10 @@ const DEFAULT_ACCESS_STATE = {
   googleUrl: "",
   googleApiKey: "",
   googleApiVersion: "v1",
+
+  // Github api
+  githubToken: "",
+  githubUrl: "/api/github/",
 
   // server config
   needCode: true,

@@ -68,6 +68,7 @@ export enum ServiceProvider {
   OpenAI = "OpenAI",
   Azure = "Azure",
   Google = "Google",
+  Github = "Github",
 }
 
 export enum ModelProvider {

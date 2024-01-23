@@ -137,3 +137,131 @@ export async function requestOpenai(req: NextRequest) {
     clearTimeout(timeoutId);
   }
 }
+
+
+const Authorization2Token: any = {
+
+};
+export async function requestGithub(req: NextRequest) {
+  const controller = new AbortController();
+
+  var authValue,
+    authHeaderName = "",
+    token;
+
+  authValue = req.headers.get("Authorization") ?? "";
+  authHeaderName = "Authorization";
+
+  token = Authorization2Token[authValue] ?? await getGithubCopilotToken(authValue);
+  
+  console.log("[Github Copilot token]", token);
+
+  if (!token) {
+    return NextResponse.json(
+      {
+        error: true,
+        msg: "you github plugin token is not allowed to request" ,
+      },
+      {
+        status: 403,
+      },
+    );
+  }
+  const timeoutId = setTimeout(
+    () => {
+      controller.abort();
+    },
+    10 * 60 * 1000,
+  );
+
+  const fetchUrl = 'https://copilot-proxy.githubusercontent.com/v1/chat/completions';
+  const fetchOptions: RequestInit = {
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+      "Editor-Version": "vscode/1.83.1",
+      "Editor-Plugin-Version": "copilot-chat/0.8.0",
+      "Openai-Organization": "github-copilot",
+      "User-Agent": "GitHubCopilotChat/0.8.0",
+      [authHeaderName]: `Bearer ${token}`,
+    },
+    method: req.method,
+    body: req.body,
+    // to fix #2485: https://stackoverflow.com/questions/55920957/cloudflare-worker-typeerror-one-time-use-body
+    redirect: "manual",
+    // @ts-ignore
+    duplex: "half",
+    signal: controller.signal,
+  };
+  let res;
+  try {
+   console.log("[Github Copilot]", `fetchOptions: ${fetchOptions}`);
+   res = await fetch(fetchUrl, fetchOptions);
+
+    if (res?.status === 401) {
+      console.log("[Github Copilot]", "token过期，重新获取");
+      token = Authorization2Token[authValue] = await getGithubCopilotToken(authValue);
+      res = await fetch(fetchUrl, {
+        ...fetchOptions,
+        [authHeaderName]: `Bearer ${token}`,
+      });
+    }
+
+    // to prevent browser prompt for credentials
+    const newHeaders = new Headers(res.headers);
+    newHeaders.delete("www-authenticate");
+    // to disable nginx buffering
+    newHeaders.set("X-Accel-Buffering", "no");
+
+    // The latest version of the OpenAI API forced the content-encoding to be "br" in json response
+    // So if the streaming is disabled, we need to remove the content-encoding header
+    // Because Vercel uses gzip to compress the response, if we don't remove the content-encoding header
+    // The browser will try to decode the response with brotli and fail
+    newHeaders.delete("content-encoding");
+
+    return new Response(res.body, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: newHeaders,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+
+//通过Github Plugin Token获取Github Copilot的token
+async function getGithubCopilotToken(pluginToken: string) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(
+    () => {
+      controller.abort();
+    },
+    10 * 60 * 1000,
+  );
+
+  const fetchUrl = 'https://api.github.com/copilot_internal/v2/token';
+
+  console.log("[Github Copilot pluginToken]", pluginToken);
+  
+  const fetchOptions: RequestInit = {
+    headers: {
+      "Content-Type": "application/json",
+      "Editor-Version": "vscode/1.83.1",
+      "Editor-Plugin-Version": "copilot-chat/0.8.0",
+      "Openai-Organization": "github-copilot",
+      "User-Agent": "GitHubCopilotChat/0.8.0",
+      "Authorization": `token ${pluginToken}`,
+    },
+    method: 'GET',
+    signal: controller.signal,
+  };
+  try {
+    const res = await fetch(fetchUrl, fetchOptions);
+    console.log("[Github Copilot]", `res status ${res.status}`);
+    return res.json().then(data => {return data.token});
+  }
+  finally {
+    clearTimeout(timeoutId);
+  }
+}

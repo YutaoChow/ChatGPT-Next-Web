@@ -34,6 +34,7 @@ export class ChatGPTApi implements LLMApi {
     const accessStore = useAccessStore.getState();
 
     const isAzure = accessStore.provider === ServiceProvider.Azure;
+    const isGithub = accessStore.provider === ServiceProvider.Github;
 
     if (isAzure && !accessStore.isValidAzure()) {
       throw Error(
@@ -41,7 +42,7 @@ export class ChatGPTApi implements LLMApi {
       );
     }
 
-    let baseUrl = isAzure ? accessStore.azureUrl : accessStore.openaiUrl;
+    let baseUrl = isAzure ? accessStore.azureUrl : (isGithub ? accessStore.githubUrl : accessStore.openaiUrl);
 
     if (baseUrl.length === 0) {
       const isApp = !!getClientConfig()?.isApp;
@@ -51,6 +52,10 @@ export class ChatGPTApi implements LLMApi {
     if (baseUrl.endsWith("/")) {
       baseUrl = baseUrl.slice(0, baseUrl.length - 1);
     }
+    if (isGithub) {
+      return [baseUrl, path].join("/");  
+    }
+
     if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath.OpenAI)) {
       baseUrl = "https://" + baseUrl;
     }
