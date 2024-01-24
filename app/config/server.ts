@@ -30,6 +30,10 @@ declare global {
       // google only
       GOOGLE_API_KEY?: string;
       GOOGLE_URL?: string;
+
+      //github only
+      GITHUB_API_TOKEN?: string;
+      // GITHUB_URL?: string;
     }
   }
 }
@@ -88,6 +92,11 @@ export const getServerSideConfig = () => {
     isGoogle,
     googleApiKey: process.env.GOOGLE_API_KEY,
     googleUrl: process.env.GOOGLE_URL,
+
+    // Github api
+    isGithub: !!process.env.GITHUB_API_TOKEN,
+    githubToken: process.env.GITHUB_API_TOKEN,
+    // githubUrl: process.env.GITHUB_URL,
 
     needCode: ACCESS_CODES.size > 0,
     code: process.env.CODE,

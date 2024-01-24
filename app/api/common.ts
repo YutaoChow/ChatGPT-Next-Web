@@ -138,29 +138,30 @@ export async function requestOpenai(req: NextRequest) {
   }
 }
 
-
-const Authorization2Token: any = {
-
-};
+const Authorization2Token: any = {};
 export async function requestGithub(req: NextRequest) {
   const controller = new AbortController();
 
-  var authValue,
-    authHeaderName = "",
+  var authBearerValue,
+    authValue,
+    authHeaderName = "Authorization",
     token;
 
-  authValue = req.headers.get("Authorization") ?? "";
-  authHeaderName = "Authorization";
+  authBearerValue = req.headers.get("Authorization") ?? "";
+  authValue = authBearerValue
+    ? authBearerValue.trim().replaceAll("Bearer ", "").trim()
+    : "";
 
-  token = Authorization2Token[authValue] ?? await getGithubCopilotToken(authValue);
-  
+  token =
+    Authorization2Token[authValue] ?? (await getGithubCopilotToken(authValue));
+
   console.log("[Github Copilot token]", token);
 
   if (!token) {
     return NextResponse.json(
       {
         error: true,
-        msg: "you github plugin token is not allowed to request" ,
+        msg: "you github plugin token is not allowed to request",
       },
       {
         status: 403,
@@ -173,8 +174,7 @@ export async function requestGithub(req: NextRequest) {
     },
     10 * 60 * 1000,
   );
-
-  const fetchUrl = 'https://copilot-proxy.githubusercontent.com/v1/chat/completions';
+  const fetchUrl = "https://api.githubcopilot.com/chat/completions";
   const fetchOptions: RequestInit = {
     headers: {
       "Content-Type": "application/json",
@@ -195,12 +195,13 @@ export async function requestGithub(req: NextRequest) {
   };
   let res;
   try {
-   console.log("[Github Copilot]", `fetchOptions: ${fetchOptions}`);
-   res = await fetch(fetchUrl, fetchOptions);
+    console.log("[Github Copilot]", `fetchOptions: ${fetchOptions}`);
+    res = await fetch(fetchUrl, fetchOptions);
 
     if (res?.status === 401) {
       console.log("[Github Copilot]", "token过期，重新获取");
-      token = Authorization2Token[authValue] = await getGithubCopilotToken(authValue);
+      token = Authorization2Token[authValue] =
+        await getGithubCopilotToken(authValue);
       res = await fetch(fetchUrl, {
         ...fetchOptions,
         [authHeaderName]: `Bearer ${token}`,
@@ -212,7 +213,9 @@ export async function requestGithub(req: NextRequest) {
     newHeaders.delete("www-authenticate");
     // to disable nginx buffering
     newHeaders.set("X-Accel-Buffering", "no");
-
+    // if (reqJson.stream) {
+    newHeaders.set("Content-type", "text/event-stream");
+    // }
     // The latest version of the OpenAI API forced the content-encoding to be "br" in json response
     // So if the streaming is disabled, we need to remove the content-encoding header
     // Because Vercel uses gzip to compress the response, if we don't remove the content-encoding header
@@ -229,7 +232,6 @@ export async function requestGithub(req: NextRequest) {
   }
 }
 
-
 //通过Github Plugin Token获取Github Copilot的token
 async function getGithubCopilotToken(pluginToken: string) {
   const controller = new AbortController();
@@ -240,10 +242,10 @@ async function getGithubCopilotToken(pluginToken: string) {
     10 * 60 * 1000,
   );
 
-  const fetchUrl = 'https://api.github.com/copilot_internal/v2/token';
+  const fetchUrl = "https://api.github.com/copilot_internal/v2/token";
 
   console.log("[Github Copilot pluginToken]", pluginToken);
-  
+
   const fetchOptions: RequestInit = {
     headers: {
       "Content-Type": "application/json",
@@ -251,17 +253,18 @@ async function getGithubCopilotToken(pluginToken: string) {
       "Editor-Plugin-Version": "copilot-chat/0.8.0",
       "Openai-Organization": "github-copilot",
       "User-Agent": "GitHubCopilotChat/0.8.0",
-      "Authorization": `token ${pluginToken}`,
+      Authorization: `token ${pluginToken}`,
     },
-    method: 'GET',
+    method: "GET",
     signal: controller.signal,
   };
   try {
     const res = await fetch(fetchUrl, fetchOptions);
     console.log("[Github Copilot]", `res status ${res.status}`);
-    return res.json().then(data => {return data.token});
-  }
-  finally {
+    return res.json().then((data) => {
+      return data.token;
+    });
+  } finally {
     clearTimeout(timeoutId);
   }
 }

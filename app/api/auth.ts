@@ -62,6 +62,8 @@ export function auth(req: NextRequest, modelProvider: ModelProvider) {
         ? serverConfig.googleApiKey
         : serverConfig.isAzure
         ? serverConfig.azureApiKey
+        : serverConfig.isGithub
+        ? serverConfig.githubToken
         : serverConfig.apiKey;
     if (systemApiKey) {
       console.log("[Auth] use system api key");

@@ -144,7 +144,7 @@ export function getHeaders() {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "x-requested-with": "XMLHttpRequest",
-    "Accept": "application/json",
+    Accept: "application/json",
   };
   const modelConfig = useChatStore.getState().currentSession().mask.modelConfig;
   const isGoogle = modelConfig.model === "gemini-pro";
@@ -159,7 +159,7 @@ export function getHeaders() {
     ? accessStore.githubToken
     : accessStore.openaiApiKey;
 
-  const makeBearer = (s: string) => `${(isAzure || isGithub)? "" : "Bearer "}${s.trim()}`;
+  const makeBearer = (s: string) => `${isAzure ? "" : "Bearer "}${s.trim()}`;
   const validString = (x: string) => x && x.length > 0;
 
   // use user's api key first
