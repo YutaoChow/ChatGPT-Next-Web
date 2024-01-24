@@ -1,10 +1,9 @@
 import { type OpenAIListModelResponse } from "@/app/client/platforms/openai";
 import { getServerSideConfig } from "@/app/config/server";
-import {  OpenaiPath } from "@/app/constant";
-//ModelProvider
+import { OpenaiPath, ModelProvider } from "@/app/constant";
 import { prettyObject } from "@/app/utils/format";
 import { NextRequest, NextResponse } from "next/server";
-// import { auth } from "../../auth";
+import { auth } from "../../auth";
 import { requestGithub } from "../../common";
 
 // const ALLOWD_PATH = new Set(Object.values(OpenaiPath));
@@ -46,12 +45,12 @@ async function handle(
   //   );
   // }
 
-  // const authResult = auth(req, ModelProvider.GPT);
-  // if (authResult.error) {
-  //   return NextResponse.json(authResult, {
-  //     status: 401,
-  //   });
-  // }
+  const authResult = auth(req, ModelProvider.GPT);
+  if (authResult.error) {
+    return NextResponse.json(authResult, {
+      status: 401,
+    });
+  }
 
   try {
     const response = await requestGithub(req);
@@ -67,7 +66,7 @@ async function handle(
 
     return response;
   } catch (e) {
-    console.error("[OpenAI] ", e);
+    console.error("[Github API] ", e);
     return NextResponse.json(prettyObject(e));
   }
 }
