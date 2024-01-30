@@ -45,6 +45,7 @@ const ACCESS_CODES = (function getAccessCodes(): any {
     const codes = JSON.parse(code || "{}");
     return codes;
   } catch (e) {
+    console.log(e, code);
     return {};
   }
 })();
