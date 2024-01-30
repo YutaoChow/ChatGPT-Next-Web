@@ -38,16 +38,14 @@ declare global {
   }
 }
 
-const ACCESS_CODES = (function getAccessCodes(): Set<string> {
+const ACCESS_CODES = (function getAccessCodes(): any {
   const code = process.env.CODE;
 
   try {
-    const codes = (code?.split(",") ?? [])
-      .filter((v) => !!v)
-      .map((v) => md5.hash(v.trim()));
-    return new Set(codes);
+    const codes = JSON.parse(code || "{}");
+    return codes;
   } catch (e) {
-    return new Set();
+    return {};
   }
 })();
 
@@ -98,7 +96,7 @@ export const getServerSideConfig = () => {
     githubToken: process.env.GITHUB_API_TOKEN,
     // githubUrl: process.env.GITHUB_URL,
 
-    needCode: ACCESS_CODES.size > 0,
+    needCode: Object.keys(ACCESS_CODES).length > 0,
     code: process.env.CODE,
     codes: ACCESS_CODES,
 

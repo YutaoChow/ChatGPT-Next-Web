@@ -30,20 +30,30 @@ export function auth(req: NextRequest, modelProvider: ModelProvider) {
   // check if it is openai api key or user token
   const { accessCode, apiKey } = parseApiKey(authToken);
 
-  const hashedCode = md5.hash(accessCode ?? "").trim();
+  const code = (accessCode || "").trim();
 
   const serverConfig = getServerSideConfig();
-  console.log("[Auth] allowed hashed codes: ", [...serverConfig.codes]);
+  console.log("[Auth] allowed hashed codes: ", serverConfig.codes);
   console.log("[Auth] got access code:", accessCode);
-  console.log("[Auth] hashed access code:", hashedCode);
+  console.log("[Auth] real access code:", code);
   console.log("[User IP] ", getIP(req));
   console.log("[Time] ", new Date().toLocaleString());
 
-  if (serverConfig.needCode && !serverConfig.codes.has(hashedCode) && !apiKey) {
-    return {
-      error: true,
-      msg: !accessCode ? "empty access code" : "wrong access code",
-    };
+  const isExist = Object.keys(serverConfig.codes).includes(code);
+  if (serverConfig.needCode) {
+    if (!isExist && !apiKey) {
+      return {
+        error: true,
+        msg: !accessCode ? "empty access code" : "wrong access code",
+      };
+    }
+    const isExpired = new Date(serverConfig.codes[code]).getTime() < Date.now();
+    if (isExpired && !apiKey) {
+      return {
+        error: true,
+        msg: !accessCode ? "empty access code" : "access code expired",
+      };
+    }
   }
 
   if (serverConfig.hideUserApiKey && !!apiKey) {
