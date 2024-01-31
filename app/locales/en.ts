@@ -364,9 +364,9 @@ const en: LocaleType = {
     },
   },
   Store: {
-    DefaultTopic: "New Conversation",
-    BotHello: "Hello! How can I assist you today?",
-    Error: "Something went wrong, please try again later.",
+    DefaultTopic: "新的对话",
+    BotHello: "您好，请问我有什么可以帮助你吗?",
+    Error: "系统错误，请稍后重试.",
     Prompt: {
       History: (content: string) =>
         "This is a summary of the chat history as a recap: " + content,
