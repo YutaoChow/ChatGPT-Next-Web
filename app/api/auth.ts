@@ -44,14 +44,14 @@ export function auth(req: NextRequest, modelProvider: ModelProvider) {
     if (!isExist && !apiKey) {
       return {
         error: true,
-        msg: !accessCode ? "empty access code" : "wrong access code",
+        msg: !accessCode ? "访问密码为空" : "访问密码错误",
       };
     }
     const isExpired = new Date(serverConfig.codes[code]).getTime() < Date.now();
     if (isExpired && !apiKey) {
       return {
         error: true,
-        msg: !accessCode ? "empty access code" : "access code expired",
+        msg: !accessCode ? "访问密码为空" : "访问密码过期",
       };
     }
   }
