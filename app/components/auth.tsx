@@ -9,6 +9,8 @@ import Locale from "../locales";
 import BotIcon from "../icons/bot.svg";
 import { useEffect } from "react";
 import { getClientConfig } from "../config/client";
+import CustomerService from "../icons/customer-service.png";
+import NextImage from "next/image";
 
 export function AuthPage() {
   const navigate = useNavigate();
@@ -57,14 +59,27 @@ export function AuthPage() {
           type="primary"
           onClick={goChat}
         />
-        <IconButton
+        {/* <IconButton
           text={Locale.Auth.Later}
           onClick={() => {
             resetAccessCode();
             goHome();
           }}
-        />
+        /> */}
       </div>
+
+      <div
+        className={styles["auth-tips"]}
+        style={{ margin: "10px 0", color: "red" }}
+      >
+        Tips: 如未获取密码，请联系微信客服获取
+      </div>
+      <NextImage
+        src={CustomerService.src}
+        alt="logo"
+        width={290}
+        height={345}
+      />
     </div>
   );
 }
